@@ -1,11 +1,11 @@
-from tkinter import Tk, Canvas, Entry, Text, Button, messagebox, font  # GUI
-import requests  # For image_from_url
-from io import BytesIO  # Build image for rendering
-from PIL import Image, ImageTk  # Build image for rendering
-import mysql.connector  # MySQL database
-from urllib.parse import quote  # Encode URLs
+from tkinter import Tk, Canvas, Entry, Text, Button, messagebox, font
+import requests
+from io import BytesIO
+from PIL import Image, ImageTk
+import mysql.connector
+from urllib.parse import quote
 import re
-import uuid  # Create unique user ID
+import uuid
 
 ASSETS_BASE_URL = "https://raw.githubusercontent.com/kkgaba686/Lend_a_Hand/main/assets/create_profile"
 
@@ -59,8 +59,8 @@ def submit_to_db():
 
     placeholders = {
         "Full Name (e.g., Krish Gaba)": name,
-        "Email (e.g., username@domain.com)": email,
-        "Biography": biography,
+        "Email (e.g., example@domain.com)": email,
+        "Biography - How do you want to Lend a Hand? - at least 10 characters long": biography,
         "Password": password,
         "Confirm Password": confirm_password
     }
@@ -101,18 +101,13 @@ def submit_to_db():
             port=3306
         )
         cursor = connection.cursor()
-
-        # Try to add the column if it doesn't exist
         try:
             cursor.execute("ALTER TABLE User_information ADD COLUMN unique_user_id VARCHAR(36) UNIQUE")
         except mysql.connector.Error as err:
-            if err.errno == 1060:
-                pass  # Column already exists
-            elif err.errno == 1146:
-                pass  # Table does not exist, will be created below
+            if err.errno in (1060, 1146):
+                pass
             else:
                 raise
-
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS User_information (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -123,18 +118,15 @@ def submit_to_db():
                 password VARCHAR(255)
             )
         """)
-
         query = """
             INSERT INTO User_information (unique_user_id, name, email, biography, password)
             VALUES (%s, %s, %s, %s, %s)
         """
         cursor.execute(query, (unique_user_id, name, email, biography, password))
         connection.commit()
-
         messagebox.showinfo("Success", f"Welcome to Lend a Hand, {name}!\nYour User ID:\n{unique_user_id}")
         cursor.close()
         connection.close()
-
     except mysql.connector.Error as e:
         messagebox.showerror("Database Error", f"An error occurred:\n{e}")
 
@@ -159,7 +151,7 @@ button_image_2 = image_from_url(relative_to_assets("button_2.png"))
 entry_image_1 = image_from_url(relative_to_assets("entry_1.png"))
 entry_image_2 = image_from_url(relative_to_assets("entry_2.png"))
 entry_image_3 = image_from_url(relative_to_assets("entry_3.png"))
-entry_image_4 = image_from_url(relative_to_assets("entry_4.png"))  
+entry_image_4 = image_from_url(relative_to_assets("entry_4.png"))
 entry_image_5 = image_from_url(relative_to_assets("entry_5.png"))
 
 window.image_image_1 = image_image_1
@@ -204,12 +196,12 @@ add_placeholder(entry_1, "Full Name (e.g., Krish Gaba)")
 canvas.create_image(280.0, 355.0, image=entry_image_2)
 entry_2 = Entry(window, bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0, font=entry_font)
 entry_2.place(x=105.0, y=330.0, width=350.0, height=48.0)
-add_placeholder(entry_2, "Email (e.g., username@domain.com)")
+add_placeholder(entry_2, "Email (e.g., example@domain.com)")
 
 canvas.create_image(280.0, 485.0, image=entry_image_5)
 entry_5 = Text(window, bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0, font=text_font)
 entry_5.place(x=110.0, y=420.0, width=340.0, height=128.0)
-add_text_placeholder(entry_5, "Biography")
+add_text_placeholder(entry_5, "Biography - How do you want to Lend a Hand? - at least 10 characters long")
 
 canvas.create_image(280.0, 600.0, image=entry_image_3)
 entry_3 = Entry(window, bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0, show="*", font=entry_font)
