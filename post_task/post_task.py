@@ -12,9 +12,9 @@ DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000"
 
 connection = mysql.connector.connect(
     host="sql5.freesqldatabase.com",
-    user="sql5788769",
-    password="wFyJFBdqix",
-    database="sql5788769"
+    user="sql5790057",
+    password="G1SxVVhcck",
+    database="sql5790057"
 )
 cursor = connection.cursor()
 
