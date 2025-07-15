@@ -95,9 +95,9 @@ def submit_to_db():
     try:
         connection = mysql.connector.connect(
             host="sql5.freesqldatabase.com",
-            user="sql5788769",
-            password="wFyJFBdqix",
-            database="sql5788769",
+            user="sql5790057",
+            password="G1SxVVhcck",
+            database="sql5790057",
             port=3306
         )
         cursor = connection.cursor()
