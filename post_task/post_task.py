@@ -18,17 +18,13 @@ connection = mysql.connector.connect(
 )
 cursor = connection.cursor()
 
-cursor.execute("""
-    CREATE TABLE IF NOT EXISTS Task_information (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        unique_task_id VARCHAR(36) UNIQUE,
-        unique_user_id VARCHAR(36),
-        task_title VARCHAR(255),
-        task_requirements_description TEXT,
-        estimated_task_duration VARCHAR(255),
-        task_date VARCHAR(50)
-    )
-""")
+# Ensure column 'task_date' exists
+try:
+    cursor.execute("ALTER TABLE Task_information ADD COLUMN task_date VARCHAR(50)")
+    connection.commit()
+except mysql.connector.errors.ProgrammingError as e:
+    if "Duplicate column name" not in str(e):
+        raise
 
 def image_from_url(url):
     response = requests.get(url)
