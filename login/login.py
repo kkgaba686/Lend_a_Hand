@@ -55,7 +55,7 @@ def login_user():
         cursor = conn.cursor()
 
         query = """
-            SELECT name FROM User_information 
+            SELECT name, unique_user_id FROM User_information 
             WHERE (email = %s AND password = %s)
                OR (unique_user_id = %s AND password = %s)
             LIMIT 1
@@ -64,7 +64,10 @@ def login_user():
         result = cursor.fetchone()
 
         if result:
-            name = result[0]
+            name, unique_id = result
+            # Save unique_user_id to session.txt
+            with open("session.txt", "w") as f:
+                f.write(unique_id)
             messagebox.showinfo("Login Success", f"Welcome, {name}.")
         else:
             messagebox.showerror("Login Failed", "Incorrect credentials. Please try again.")
