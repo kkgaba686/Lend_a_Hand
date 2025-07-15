@@ -2,6 +2,9 @@ import requests
 from io import BytesIO
 from PIL import Image, ImageTk
 from tkinter import Tk, Canvas, Button
+import subprocess
+import sys
+import os
 
 ASSET_BASE_URL = "https://raw.githubusercontent.com/kkgaba686/Lend_a_Hand/main/assets/landing_page/"
 
@@ -12,6 +15,12 @@ def image_from_url(filename, size=None):
     if size:
         image = image.resize(size, Image.LANCZOS)
     return ImageTk.PhotoImage(image)
+
+def open_create_profile():
+    # Path to create_profile.py one directory up in create_profile folder
+    script_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'create_profile', 'create_profile.py')
+    # Use the same python executable to run the script
+    subprocess.Popen([sys.executable, script_path])
 
 window = Tk()
 window.geometry("1440x960")
@@ -36,7 +45,7 @@ button_1 = Button(
     image=button_image_1,
     borderwidth=0,
     highlightthickness=0,
-    command=lambda: print("button_1 clicked"),
+    command=open_create_profile,
     relief="flat"
 )
 button_1.place(x=438.0, y=530.0, width=564.0, height=109.0)
