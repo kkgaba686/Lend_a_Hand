@@ -6,6 +6,9 @@ import mysql.connector
 from urllib.parse import quote
 import re
 import uuid
+import os
+import subprocess
+import sys
 
 ASSETS_BASE_URL = "https://raw.githubusercontent.com/kkgaba686/Lend_a_Hand/main/assets/create_profile"
 
@@ -20,31 +23,45 @@ def relative_to_assets(filename: str) -> str:
     encoded_filename = quote(filename)
     return f"{ASSETS_BASE_URL}/{encoded_filename}"
 
-def add_placeholder(entry_widget, placeholder):
+def add_placeholder(entry_widget, placeholder, is_password=False):
     entry_widget.insert(0, placeholder)
-    entry_widget.bind("<FocusIn>", lambda e: clear_placeholder(entry_widget, placeholder))
-    entry_widget.bind("<FocusOut>", lambda e: restore_placeholder(entry_widget, placeholder))
+    entry_widget.config(fg='grey')
+    if is_password:
+        entry_widget.config(show='')
 
-def clear_placeholder(entry_widget, placeholder):
-    if entry_widget.get() == placeholder:
-        entry_widget.delete(0, 'end')
+    def on_focus_in(event):
+        if entry_widget.get() == placeholder:
+            entry_widget.delete(0, 'end')
+            entry_widget.config(fg='black')
+            if is_password:
+                entry_widget.config(show='*')
 
-def restore_placeholder(entry_widget, placeholder):
-    if not entry_widget.get():
-        entry_widget.insert(0, placeholder)
+    def on_focus_out(event):
+        if not entry_widget.get():
+            entry_widget.insert(0, placeholder)
+            entry_widget.config(fg='grey')
+            if is_password:
+                entry_widget.config(show='')
+
+    entry_widget.bind("<FocusIn>", on_focus_in)
+    entry_widget.bind("<FocusOut>", on_focus_out)
 
 def add_text_placeholder(text_widget, placeholder):
     text_widget.insert("1.0", placeholder)
-    text_widget.bind("<FocusIn>", lambda e: clear_text_placeholder(text_widget, placeholder))
-    text_widget.bind("<FocusOut>", lambda e: restore_text_placeholder(text_widget, placeholder))
+    text_widget.config(fg='grey')
 
-def clear_text_placeholder(text_widget, placeholder):
-    if text_widget.get("1.0", "end-1c") == placeholder:
-        text_widget.delete("1.0", "end")
+    def on_focus_in(event):
+        if text_widget.get("1.0", "end-1c") == placeholder:
+            text_widget.delete("1.0", "end")
+            text_widget.config(fg='black')
 
-def restore_text_placeholder(text_widget, placeholder):
-    if not text_widget.get("1.0", "end-1c"):
-        text_widget.insert("1.0", placeholder)
+    def on_focus_out(event):
+        if not text_widget.get("1.0", "end-1c"):
+            text_widget.insert("1.0", placeholder)
+            text_widget.config(fg='grey')
+
+    text_widget.bind("<FocusIn>", on_focus_in)
+    text_widget.bind("<FocusOut>", on_focus_out)
 
 def is_valid_email(email):
     pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
@@ -130,6 +147,14 @@ def submit_to_db():
     except mysql.connector.Error as e:
         messagebox.showerror("Database Error", f"An error occurred:\n{e}")
 
+def open_login():
+    # Assumes login.py is one directory up, inside 'login' folder
+    login_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "login", "login.py"))
+    if os.path.exists(login_path):
+        subprocess.Popen([sys.executable, login_path])
+    else:
+        messagebox.showerror("Error", f"Could not find login.py at:\n{login_path}")
+
 window = Tk()
 window.geometry("1440x960")
 window.configure(bg="#FFFFFF")
@@ -180,38 +205,38 @@ button_2 = Button(
     image=button_image_2,
     borderwidth=0,
     highlightthickness=0,
-    command=lambda: print("button_2 clicked"),
+    command=open_login,
     relief="flat"
 )
 button_2.place(x=85.0, y=838.0, width=326.0, height=25.0)
 
-entry_font = font.Font(family="Helvetica", size=14)
-text_font = font.Font(family="Helvetica", size=14)
+entry_font = font.Font(family="Arial", size=14)
+text_font = font.Font(family="Arial", size=14)
 
 canvas.create_image(280.0, 265.0, image=entry_image_1)
-entry_1 = Entry(window, bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0, font=entry_font)
+entry_1 = Entry(window, bd=0, bg="#D9D9D9", fg="grey", highlightthickness=0, font=entry_font)
 entry_1.place(x=105.0, y=240.0, width=350.0, height=48.0)
 add_placeholder(entry_1, "Full Name (e.g., Krish Gaba)")
 
 canvas.create_image(280.0, 355.0, image=entry_image_2)
-entry_2 = Entry(window, bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0, font=entry_font)
+entry_2 = Entry(window, bd=0, bg="#D9D9D9", fg="grey", highlightthickness=0, font=entry_font)
 entry_2.place(x=105.0, y=330.0, width=350.0, height=48.0)
 add_placeholder(entry_2, "Email (e.g., example@domain.com)")
 
 canvas.create_image(280.0, 485.0, image=entry_image_5)
-entry_5 = Text(window, bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0, font=text_font)
+entry_5 = Text(window, bd=0, bg="#D9D9D9", fg="grey", highlightthickness=0, font=text_font)
 entry_5.place(x=110.0, y=420.0, width=340.0, height=128.0)
 add_text_placeholder(entry_5, "Biography - How do you want to Lend a Hand? - at least 10 characters long")
 
 canvas.create_image(280.0, 600.0, image=entry_image_3)
-entry_3 = Entry(window, bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0, show="*", font=entry_font)
+entry_3 = Entry(window, bd=0, bg="#D9D9D9", fg="grey", highlightthickness=0, show="", font=entry_font)
 entry_3.place(x=105.0, y=575.0, width=350.0, height=48.0)
-add_placeholder(entry_3, "Password")
+add_placeholder(entry_3, "Password", is_password=True)
 
 canvas.create_image(280.0, 680.0, image=entry_image_4)
-entry_4 = Entry(window, bd=0, bg="#D9D9D9", fg="#000716", highlightthickness=0, show="*", font=entry_font)
+entry_4 = Entry(window, bd=0, bg="#D9D9D9", fg="grey", highlightthickness=0, show="", font=entry_font)
 entry_4.place(x=105.0, y=655.0, width=350.0, height=48.0)
-add_placeholder(entry_4, "Confirm Password")
+add_placeholder(entry_4, "Confirm Password", is_password=True)
 
 window.resizable(False, False)
 window.mainloop()
