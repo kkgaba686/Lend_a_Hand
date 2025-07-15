@@ -6,9 +6,9 @@ from PIL import Image, ImageTk
 import datetime
 import uuid
 import mysql.connector
+import os
 
 ASSETS_BASE_URL = "https://raw.githubusercontent.com/kkgaba686/Lend_a_Hand/main/assets/post_task"
-DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000"
 
 connection = mysql.connector.connect(
     host="sql5.freesqldatabase.com",
@@ -25,7 +25,8 @@ cursor.execute("""
         unique_user_id VARCHAR(36),
         task_title VARCHAR(255),
         task_requirements_description TEXT,
-        estimated_task_duration VARCHAR(255)
+        estimated_task_duration VARCHAR(255),
+        task_date VARCHAR(50)
     )
 """)
 
@@ -42,16 +43,26 @@ def relative_to_assets(filename: str) -> str:
 
 def add_text_placeholder(text_widget, placeholder):
     text_widget.insert("1.0", placeholder)
+    text_widget.config(fg="grey")
     text_widget.bind("<FocusIn>", lambda e: clear_text_placeholder(text_widget, placeholder))
     text_widget.bind("<FocusOut>", lambda e: restore_text_placeholder(text_widget, placeholder))
 
 def clear_text_placeholder(text_widget, placeholder):
     if text_widget.get("1.0", "end-1c") == placeholder:
         text_widget.delete("1.0", "end")
+        text_widget.config(fg="black")
 
 def restore_text_placeholder(text_widget, placeholder):
     if not text_widget.get("1.0", "end-1c"):
         text_widget.insert("1.0", placeholder)
+        text_widget.config(fg="grey")
+
+def get_logged_in_user_id():
+    try:
+        with open(os.path.join(os.path.dirname(__file__), "../login/session.txt"), "r") as file:
+            return file.read().strip()
+    except Exception:
+        return None
 
 def validate_and_submit():
     title = entry_1.get("1.0", "end-1c").strip()
@@ -83,8 +94,12 @@ def validate_and_submit():
         return
 
     estimated_task_duration = f"{hours}h {minutes}m".strip()
-
     unique_task_id = str(uuid.uuid4())
+    unique_user_id = get_logged_in_user_id()
+
+    if not unique_user_id:
+        messagebox.showerror("Error", "No user session found. Please log in again.")
+        return
 
     query = """
         INSERT INTO Task_information (
@@ -92,14 +107,16 @@ def validate_and_submit():
             unique_user_id,
             task_title,
             task_requirements_description,
-            estimated_task_duration
-        ) VALUES (%s, %s, %s, %s, %s)
+            estimated_task_duration,
+            task_date
+        ) VALUES (%s, %s, %s, %s, %s, %s)
     """
-    cursor.execute(query, (unique_task_id, DEFAULT_USER_ID, title, description, estimated_task_duration))
+    cursor.execute(query, (unique_task_id, unique_user_id, title, description, estimated_task_duration, preferred_date))
     connection.commit()
 
     messagebox.showinfo("Success", f"One hand, coming right up!\nYour unique task ID is: {unique_task_id}")
 
+# --- GUI setup ---
 window = Tk()
 window.geometry("411x823")
 window.configure(bg="#FFFFFF")
@@ -141,20 +158,20 @@ canvas.create_image(348.0, 612.0, image=image_image_7)
 ENTRY_FONT = ("Arial", 12)
 
 canvas.create_image(205.5, 215.0, image=entry_image_1)
-entry_1 = Text(window, bd=0, bg="#D9D9D9", fg="#000000", font=ENTRY_FONT, wrap="word", padx=10, pady=10, height=2)
+entry_1 = Text(window, bd=0, bg="#D9D9D9", font=ENTRY_FONT, wrap="word", padx=10, pady=10, height=2)
 entry_1.place(x=60.0, y=190.0, width=291.0, height=48.0)
 add_text_placeholder(entry_1, "Task Title (E.g., 'Mowing the lawn')")
 
 canvas.create_image(101.0, 613.0, image=entry_image_2)
-entry_2 = Text(window, bd=0, bg="#D9D9D9", fg="#000000", font=ENTRY_FONT, padx=10, pady=10, height=2)
+entry_2 = Text(window, bd=0, bg="#D9D9D9", font=ENTRY_FONT, padx=10, pady=10, height=2)
 entry_2.place(x=61.0, y=588.0, width=80.0, height=48.0)
 
 canvas.create_image(262.0, 613.0, image=entry_image_3)
-entry_3 = Text(window, bd=0, bg="#D9D9D9", fg="#000000", font=ENTRY_FONT, padx=10, pady=10, height=2)
+entry_3 = Text(window, bd=0, bg="#D9D9D9", font=ENTRY_FONT, padx=10, pady=10, height=2)
 entry_3.place(x=222.0, y=588.0, width=80.0, height=48.0)
 
 canvas.create_image(205.5, 413.0, image=entry_image_4)
-entry_4 = Text(window, bd=0, bg="#D9D9D9", fg="#000000", font=ENTRY_FONT, wrap="word", padx=10, pady=10)
+entry_4 = Text(window, bd=0, bg="#D9D9D9", font=ENTRY_FONT, wrap="word", padx=10, pady=10)
 entry_4.place(x=65.0, y=258.0, width=281.0, height=308.0)
 add_text_placeholder(entry_4, "Task Requirements Description (Be specific - What do you need done? Any particular skills required? Location?)")
 
