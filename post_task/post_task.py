@@ -12,9 +12,9 @@ ASSETS_BASE_URL = "https://raw.githubusercontent.com/kkgaba686/Lend_a_Hand/main/
 
 connection = mysql.connector.connect(
     host="sql5.freesqldatabase.com",
-    user="sql5790057",
-    password="G1SxVVhcck",
-    database="sql5790057"
+    user="sql5794100",
+    password="BmzWGi52RK",
+    database="sql5794100"
 )
 cursor = connection.cursor()
 

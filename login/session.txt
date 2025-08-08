@@ -1,4 +1,1 @@
-Pending: collect user ID from session.txt in \login and include this when saving task inside Task_information inside post_task.py. 
-
-Once this change has been made, commit as so:
-post_task.py now collects unique_user_id from session.txt and stores it - associating a user to a task.
+480e2fdd-3809-457d-a7b9-aecf32e6e8e4
