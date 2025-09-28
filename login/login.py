@@ -193,14 +193,24 @@ class LoginApplication:
             )
             cursor = conn.cursor()
 
-            # Query for email or user ID authentication
-            query = """
-                SELECT name, unique_user_id FROM User_information 
-                WHERE (email = %s AND password = %s)
-                   OR (unique_user_id = %s AND password = %s)
-                LIMIT 1
-            """
-            cursor.execute(query, (email_input, password_input_email, user_id_input, password_input_uid))
+            # Determine which login method to use and execute appropriate query
+            if email_input and password_input_email:
+                # Email login method
+                query = """
+                    SELECT name, unique_user_id FROM User_information 
+                    WHERE email = %s AND password = %s
+                    LIMIT 1
+                """
+                cursor.execute(query, (email_input, password_input_email))
+            else:
+                # User ID login method
+                query = """
+                    SELECT name, unique_user_id FROM User_information 
+                    WHERE unique_user_id = %s AND password = %s
+                    LIMIT 1
+                """
+                cursor.execute(query, (user_id_input, password_input_uid))
+
             result = cursor.fetchone()
 
             if result:
