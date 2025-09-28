@@ -1,3 +1,8 @@
+"""
+Login Application for Lend a Hand Platform
+GUI-based authentication system supporting email and user ID login methods.
+"""
+
 import requests
 from io import BytesIO
 from PIL import Image, ImageTk
@@ -5,165 +10,215 @@ from tkinter import Tk, Canvas, Entry, Button, StringVar, messagebox
 import tkinter.font as tkFont
 import mysql.connector
 
-ASSETS_BASE_URL = "https://raw.githubusercontent.com/kkgaba686/Lend_a_Hand/main/assets/login/"
+class LoginApplication:
+    """Main application class handling user authentication and GUI management."""
+    
+    def __init__(self):
+        """Initialize the application window and UI components."""
+        self.setup_gui()
+    
+    def setup_gui(self):
+        """Configure the main window, canvas, and all visual elements."""
+        self.window = Tk()
+        self.window.geometry("411x823")
+        self.window.configure(bg="#FFFFFF")
 
-def image_from_url(filename):
-    url = f"{ASSETS_BASE_URL}{filename}"
-    response = requests.get(url)
-    image = Image.open(BytesIO(response.content))
-    return ImageTk.PhotoImage(image)
-
-def add_placeholder(entry, placeholder_text, is_password=False):
-    entry.insert(0, placeholder_text)
-    entry.config(fg='grey', show='')
-
-    def on_focus_in(event):
-        if entry.get() == placeholder_text:
-            entry.delete(0, "end")
-            entry.config(fg='black')
-            if is_password:
-                entry.config(show='*')
-
-    def on_focus_out(event):
-        if entry.get() == "":
-            entry.insert(0, placeholder_text)
-            entry.config(fg='grey')
-            if is_password:
-                entry.config(show='')
-
-    entry.bind("<FocusIn>", on_focus_in)
-    entry.bind("<FocusOut>", on_focus_out)
-
-def login_user():
-    email_input = entry_1.get().strip()
-    password_input_email = entry_2.get().strip()
-    user_id_input = entry_3.get().strip()
-    password_input_uid = entry_4.get().strip()
-
-    if email_input == "" and user_id_input == "":
-        messagebox.showwarning("Input Error", "Please enter either Email or Unique User ID.")
-        return
-
-    try:
-        conn = mysql.connector.connect(
-            host="sql5.freesqldatabase.com",
-            user="sql5794100",
-            password="BmzWGi52RK",
-            database="sql5794100",
-            port=3306
+        self.canvas = Canvas(
+            self.window,
+            bg="#FFFFFF",
+            height=823,
+            width=411,
+            bd=0,
+            highlightthickness=0,
+            relief="ridge"
         )
-        cursor = conn.cursor()
+        self.canvas.place(x=0, y=0)
 
-        query = """
-            SELECT name, unique_user_id FROM User_information 
-            WHERE (email = %s AND password = %s)
-               OR (unique_user_id = %s AND password = %s)
-            LIMIT 1
+        self.canvas.create_rectangle(0.0, 230.0, 411.0, 823.0, fill="#FFE347", outline="")
+
+        font_style = tkFont.Font(family="Arial", size=14)
+
+        # Load and position decorative images
+        image_image_1 = self.image_from_url("image_1.png")
+        self.canvas.create_image(205.0, 116.0, image=image_image_1)
+
+        image_image_2 = self.image_from_url("image_2.png")
+        self.canvas.create_image(205.0, 802.0, image=image_image_2)
+
+        image_image_3 = self.image_from_url("image_3.png")
+        self.canvas.create_image(205.0, 31.0, image=image_image_3)
+
+        image_image_4 = self.image_from_url("image_4.png")
+        self.canvas.create_image(204.0, 454.0, image=image_image_4)
+
+        # Login submission button
+        button_image_1 = self.image_from_url("button_1.png")
+        self.button_1 = Button(
+            image=button_image_1,
+            borderwidth=0,
+            highlightthickness=0,
+            command=self.login_user,
+            relief="flat"
+        )
+        self.button_1.place(x=16.0, y=681.0, width=380.0, height=75.0)
+
+        # Form container background
+        self.canvas.create_rectangle(
+            36.460784729942134,
+            253.6444091796875,
+            372.26978081203197,
+            654.2305119613333,
+            fill="#FAFAFA",
+            outline=""
+        )
+
+        # Form header image
+        image_image_5 = self.image_from_url("image_5.png")
+        self.canvas.create_image(158.0, 291.0, image=image_image_5)
+
+        # Email input field
+        entry_image_1 = self.image_from_url("entry_1.png")
+        self.canvas.create_image(205.5, 378.0, image=entry_image_1)
+        self.entry_1 = Entry(bd=0, bg="#D9D9D9", fg="#000716", justify="center", font=font_style)
+        self.entry_1.place(x=60.0, y=353.0, width=291.0, height=48.0)
+        self.add_placeholder(self.entry_1, "Email (e.g., example@domain.com)")
+
+        # Password field for email login
+        entry_image_2 = self.image_from_url("entry_2.png")
+        self.canvas.create_image(205.5, 446.0, image=entry_image_2)
+        self.entry_2 = Entry(bd=0, bg="#D9D9D9", fg="#000716", justify="center", font=font_style)
+        self.entry_2.place(x=60.0, y=421.0, width=291.0, height=48.0)
+        self.add_placeholder(self.entry_2, "Password", is_password=True)
+
+        # User ID input field
+        entry_image_3 = self.image_from_url("entry_3.png")
+        self.canvas.create_image(205.5, 545.0, image=entry_image_3)
+        self.entry_3 = Entry(bd=0, bg="#D9D9D9", fg="#000716", justify="center", font=font_style)
+        self.entry_3.place(x=60.0, y=520.0, width=291.0, height=48.0)
+        self.add_placeholder(self.entry_3, "Assigned Unique User ID")
+
+        # Password field for user ID login
+        entry_image_4 = self.image_from_url("entry_4.png")
+        self.canvas.create_image(205.5, 613.0, image=entry_image_4)
+        self.entry_4 = Entry(bd=0, bg="#D9D9D9", fg="#000716", justify="center", font=font_style)
+        self.entry_4.place(x=60.0, y=588.0, width=291.0, height=48.0)
+        self.add_placeholder(self.entry_4, "Password", is_password=True)
+
+        # Additional UI elements
+        image_image_6 = self.image_from_url("image_6.png")
+        self.canvas.create_image(204.0, 495.0, image=image_image_6)
+
+        image_image_7 = self.image_from_url("image_7.png")
+        self.canvas.create_image(312.5294189453125, 322.22021484375, image=image_image_7)
+
+        image_image_8 = self.image_from_url("image_8.png")
+        self.canvas.create_image(175.0, 328.0, image=image_image_8)
+
+        self.window.resizable(False, False)
+        self.window.mainloop()
+
+    def image_from_url(self, filename):
         """
-        cursor.execute(query, (email_input, password_input_email, user_id_input, password_input_uid))
-        result = cursor.fetchone()
+        Load image from remote URL and convert for Tkinter use.
+        
+        Args:
+            filename: Image file name from assets repository
+            
+        Returns:
+            ImageTk.PhotoImage: Tkinter-compatible image object
+        """
+        ASSETS_BASE_URL = "https://raw.githubusercontent.com/kkgaba686/Lend_a_Hand/main/assets/login/"
+        url = f"{ASSETS_BASE_URL}{filename}"
+        response = requests.get(url)
+        image = Image.open(BytesIO(response.content))
+        return ImageTk.PhotoImage(image)
 
-        if result:
-            name, unique_id = result
-            # Save unique_user_id to session.txt
-            with open("session.txt", "w") as f:
-                f.write(unique_id)
-            messagebox.showinfo("Login Success", f"Welcome, {name}.")
-        else:
-            messagebox.showerror("Login Failed", "Incorrect credentials. Please try again.")
+    def add_placeholder(self, entry, placeholder_text, is_password=False):
+        """
+        Add hint text to input fields that clears on focus.
+        
+        Args:
+            entry: Tkinter Entry widget to enhance
+            placeholder_text: Hint text to display when field is empty
+            is_password: Whether field should mask input characters
+        """
+        entry.insert(0, placeholder_text)
+        entry.config(fg='grey', show='')
 
-        cursor.close()
-        conn.close()
+        def on_focus_in(event):
+            """Clear placeholder text when user selects the field"""
+            if entry.get() == placeholder_text:
+                entry.delete(0, "end")
+                entry.config(fg='black')
+                if is_password:
+                    entry.config(show='*')
 
-    except mysql.connector.Error as e:
-        messagebox.showerror("Database Error", f"An error occurred:\n{e}")
+        def on_focus_out(event):
+            """Restore placeholder if field remains empty"""
+            if entry.get() == "":
+                entry.insert(0, placeholder_text)
+                entry.config(fg='grey')
+                if is_password:
+                    entry.config(show='')
 
-# --- GUI ---
-window = Tk()
-window.geometry("411x823")
-window.configure(bg="#FFFFFF")
+        entry.bind("<FocusIn>", on_focus_in)
+        entry.bind("<FocusOut>", on_focus_out)
 
-canvas = Canvas(
-    window,
-    bg="#FFFFFF",
-    height=823,
-    width=411,
-    bd=0,
-    highlightthickness=0,
-    relief="ridge"
-)
-canvas.place(x=0, y=0)
+    def login_user(self):
+        """
+        Authenticate user credentials against database records.
+        
+        Supports dual login methods: email/password or user ID/password.
+        Saves successful login session to file for persistence.
+        """
+        # Retrieve and clean user inputs
+        email_input = self.entry_1.get().strip()
+        password_input_email = self.entry_2.get().strip()
+        user_id_input = self.entry_3.get().strip()
+        password_input_uid = self.entry_4.get().strip()
 
-canvas.create_rectangle(0.0, 230.0, 411.0, 823.0, fill="#FFE347", outline="")
+        # Validate at least one login method is provided
+        if email_input == "" and user_id_input == "":
+            messagebox.showwarning("Input Error", "Please enter either Email or Unique User ID.")
+            return
 
-font_style = tkFont.Font(family="Arial", size=14)
+        try:
+            # Establish database connection
+            conn = mysql.connector.connect(
+                host="sql5.freesqldatabase.com",
+                user="sql5800183",
+                password="M1cRUDEctC",
+                database="sql5800183",
+                port=3306
+            )
+            cursor = conn.cursor()
 
-image_image_1 = image_from_url("image_1.png")
-image_1 = canvas.create_image(205.0, 116.0, image=image_image_1)
+            # Query for email or user ID authentication
+            query = """
+                SELECT name, unique_user_id FROM User_information 
+                WHERE (email = %s AND password = %s)
+                   OR (unique_user_id = %s AND password = %s)
+                LIMIT 1
+            """
+            cursor.execute(query, (email_input, password_input_email, user_id_input, password_input_uid))
+            result = cursor.fetchone()
 
-image_image_2 = image_from_url("image_2.png")
-image_2 = canvas.create_image(205.0, 802.0, image=image_image_2)
+            if result:
+                # Successful authentication
+                name, unique_id = result
+                with open("session.txt", "w") as f:
+                    f.write(unique_id)
+                messagebox.showinfo("Login Success", f"Welcome, {name}.")
+            else:
+                messagebox.showerror("Login Failed", "Incorrect credentials. Please try again.")
 
-image_image_3 = image_from_url("image_3.png")
-image_3 = canvas.create_image(205.0, 31.0, image=image_image_3)
+            cursor.close()
+            conn.close()
 
-image_image_4 = image_from_url("image_4.png")
-image_4 = canvas.create_image(204.0, 454.0, image=image_image_4)
+        except mysql.connector.Error as e:
+            messagebox.showerror("Database Error", f"An error occurred:\n{e}")
 
-button_image_1 = image_from_url("button_1.png")
-button_1 = Button(
-    image=button_image_1,
-    borderwidth=0,
-    highlightthickness=0,
-    command=login_user,
-    relief="flat"
-)
-button_1.place(x=16.0, y=681.0, width=380.0, height=75.0)
 
-canvas.create_rectangle(
-    36.460784729942134,
-    253.6444091796875,
-    372.26978081203197,
-    654.2305119613333,
-    fill="#FAFAFA",
-    outline=""
-)
-
-image_image_5 = image_from_url("image_5.png")
-image_5 = canvas.create_image(158.0, 291.0, image=image_image_5)
-
-entry_image_1 = image_from_url("entry_1.png")
-entry_bg_1 = canvas.create_image(205.5, 378.0, image=entry_image_1)
-entry_1 = Entry(bd=0, bg="#D9D9D9", fg="#000716", justify="center", font=font_style)
-entry_1.place(x=60.0, y=353.0, width=291.0, height=48.0)
-add_placeholder(entry_1, "Email (e.g., example@domain.com)")
-
-entry_image_2 = image_from_url("entry_2.png")
-entry_bg_2 = canvas.create_image(205.5, 446.0, image=entry_image_2)
-entry_2 = Entry(bd=0, bg="#D9D9D9", fg="#000716", justify="center", font=font_style)
-entry_2.place(x=60.0, y=421.0, width=291.0, height=48.0)
-add_placeholder(entry_2, "Password", is_password=True)
-
-entry_image_3 = image_from_url("entry_3.png")
-entry_bg_3 = canvas.create_image(205.5, 545.0, image=entry_image_3)
-entry_3 = Entry(bd=0, bg="#D9D9D9", fg="#000716", justify="center", font=font_style)
-entry_3.place(x=60.0, y=520.0, width=291.0, height=48.0)
-add_placeholder(entry_3, "Assigned Unique User ID")
-
-entry_image_4 = image_from_url("entry_4.png")
-entry_bg_4 = canvas.create_image(205.5, 613.0, image=entry_image_4)
-entry_4 = Entry(bd=0, bg="#D9D9D9", fg="#000716", justify="center", font=font_style)
-entry_4.place(x=60.0, y=588.0, width=291.0, height=48.0)
-add_placeholder(entry_4, "Password", is_password=True)
-
-image_image_6 = image_from_url("image_6.png")
-image_6 = canvas.create_image(204.0, 495.0, image=image_image_6)
-
-image_image_7 = image_from_url("image_7.png")
-image_7 = canvas.create_image(312.5294189453125, 322.22021484375, image=image_image_7)
-
-image_image_8 = image_from_url("image_8.png")
-image_8 = canvas.create_image(175.0, 328.0, image=image_image_8)
-
-window.resizable(False, False)
-window.mainloop()
+# Start the application
+if __name__ == "__main__":
+    app = LoginApplication()
